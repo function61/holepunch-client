@@ -1,0 +1,12 @@
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/function61/pi-security-module"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+
+[prune]
+  go-tests = true
+  unused-packages = true
