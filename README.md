@@ -17,7 +17,7 @@ Download a suitable binary for you from the Bintray link.
 First, generate a keypair for you:
 
 ```
-$ ssh-keygen -t ecdsa -b 521
+$ ssh-keygen -t ecdsa -b 521 -C "my awesome private key" -f id_ecdsa
 ```
 
 Copy content of `id_ecdsa.pub` to your SSH server's `authorized_keys` file.
