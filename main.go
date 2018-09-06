@@ -110,8 +110,6 @@ func runOnce(conf *Configuration) error {
 
 		go handleClient(client, conf)
 	}
-
-	return nil
 }
 
 func main() {
