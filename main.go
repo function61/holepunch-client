@@ -13,11 +13,17 @@ import (
 	"time"
 )
 
+type SshServer struct {
+	Username           string   `json:"username"`
+	PrivateKeyFilePath string   `json:"private_key_file_path"`
+	Endpoint           Endpoint `json:"endpoint"`
+}
+
 type Configuration struct {
+	// remote SSH server
+	SshServer SshServer `json:"ssh_server"`
 	// local service to be forwarded
 	Local Endpoint `json:"local"`
-	// remote SSH server
-	Server Endpoint `json:"server"`
 	// remote forwarding port (on remote SSH server network)
 	Remote Endpoint `json:"remote"`
 }
@@ -81,15 +87,15 @@ func publicKeyFromPrivateKeyFile(file string) ssh.AuthMethod {
 
 func runOnce(conf *Configuration) error {
 	sshConfig := &ssh.ClientConfig{
-		User: "root",
+		User: conf.SshServer.Username,
 		Auth: []ssh.AuthMethod{
-			publicKeyFromPrivateKeyFile("id_ecdsa"),
+			publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
 	// Connect to SSH remote server using serverEndpoint
-	serverConn, err := ssh.Dial("tcp", conf.Server.String(), sshConfig)
+	serverConn, err := ssh.Dial("tcp", conf.SshServer.Endpoint.String(), sshConfig)
 	if err != nil {
 		return err
 	}

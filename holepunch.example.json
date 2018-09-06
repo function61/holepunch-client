@@ -1,5 +1,9 @@
 {
+	"ssh_server": {
+		"username": "root",
+		"endpoint": { "host": "my-ssh-server.example.com", "port": 22 },
+		"private_key_file_path": "id_ecdsa"
+	},
 	"local": { "host": "127.0.0.1", "port": 8080 },
-	"server": { "host": "my-ssh-server.example.com", "port": 22 },
 	"remote": { "host": "0.0.0.0", "port": 8080 }
 }
