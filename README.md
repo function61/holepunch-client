@@ -6,7 +6,7 @@ What?
 
 This is a standalone binary for creating a semi-persistent SSH reverse tunnel.
 
-Failed connections are automatically retried (TODO: exponential backoff) and includes a helper to add this service to system startup (Systemd).
+Failed connections are automatically retried and includes a helper to add this service to system startup (Systemd).
 
 
 Usage
@@ -45,4 +45,5 @@ TODO
 
 - Polishing
 - Use [spf13/cobra](https://github.com/spf13/cobra)
+- Exponential backoff on errors
 - Improve error messages, handling and remove panics
