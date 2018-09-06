@@ -64,7 +64,7 @@ func handleClient(client net.Conn, conf *Configuration) {
 	log.Printf("handleClient: closed")
 }
 
-func publicKeyFile(file string) ssh.AuthMethod {
+func publicKeyFromPrivateKeyFile(file string) ssh.AuthMethod {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatalln(fmt.Sprintf("Cannot read SSH public key file %s", file))
@@ -83,7 +83,7 @@ func runOnce(conf *Configuration) error {
 	sshConfig := &ssh.ClientConfig{
 		User: "root",
 		Auth: []ssh.AuthMethod{
-			publicKeyFile("id_ecdsa"),
+			publicKeyFromPrivateKeyFile("id_ecdsa"),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
