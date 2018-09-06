@@ -38,20 +38,23 @@ func (endpoint *Endpoint) String() string {
 }
 
 func handleClient(client net.Conn, conf *Configuration) {
+	defer client.Close()
+
+	log.Printf("handleClient: accepted %s", client.RemoteAddr())
+
 	remote, err := net.Dial("tcp", conf.Local.String())
 	if err != nil {
-		log.Printf("Dial INTO local service error: %s", err.Error())
+		log.Printf("handleClient: dial INTO local service error: %s", err.Error())
 		return
 	}
 
-	defer client.Close()
 	chDone := make(chan bool)
 
 	// Start remote -> local data transfer
 	go func() {
 		_, err := io.Copy(client, remote)
 		if err != nil {
-			log.Println(fmt.Sprintf("error while copy remote->local: %s", err))
+			log.Printf("handleClient: error while copy remote->local: %s", err)
 		}
 		chDone <- true
 	}()
@@ -60,7 +63,7 @@ func handleClient(client net.Conn, conf *Configuration) {
 	go func() {
 		_, err := io.Copy(remote, client)
 		if err != nil {
-			log.Println(fmt.Sprintf("error while copy local->remote: %s", err))
+			log.Printf("handleClient: error while copy local->remote: %s", err)
 		}
 		chDone <- true
 	}()
@@ -70,27 +73,26 @@ func handleClient(client net.Conn, conf *Configuration) {
 	log.Printf("handleClient: closed")
 }
 
-func publicKeyFromPrivateKeyFile(file string) ssh.AuthMethod {
+func publicKeyFromPrivateKeyFile(file string) (ssh.AuthMethod, error) {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatalln(fmt.Sprintf("Cannot read SSH public key file %s", file))
-		return nil
+		return nil, fmt.Errorf("Cannot read SSH public key file %s", file)
 	}
 
 	key, err := ssh.ParsePrivateKey(buffer)
 	if err != nil {
-		log.Fatalln(fmt.Sprintf("Cannot parse SSH public key file %s", file))
-		return nil
+		return nil, fmt.Errorf("Cannot parse SSH public key file %s", file)
 	}
-	return ssh.PublicKeys(key)
+
+	return ssh.PublicKeys(key), nil
 }
 
-func runOnce(conf *Configuration) error {
+func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
+	log.Printf("connectToSshAndServe: connecting")
+
 	sshConfig := &ssh.ClientConfig{
 		User: conf.SshServer.Username,
-		Auth: []ssh.AuthMethod{
-			publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath),
-		},
+		Auth: []ssh.AuthMethod{auth},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
@@ -99,6 +101,8 @@ func runOnce(conf *Configuration) error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("connectToSshAndServe: connected")
 
 	// Listen on remote server port
 	listener, err := serverConn.Listen("tcp", conf.Remote.String())
@@ -109,6 +113,8 @@ func runOnce(conf *Configuration) error {
 
 	// handle incoming connections on reverse forwarded tunnel
 	for {
+		log.Printf("connectToSshAndServe: waiting for incoming connections")
+
 		client, err := listener.Accept()
 		if err != nil {
 			return err
@@ -139,10 +145,15 @@ func main() {
 
 		confFile.Close()
 
-		for {
-			err := runOnce(conf)
+		sshAuth, errSshPrivateKey := publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
+		if errSshPrivateKey != nil {
+			panic(errSshPrivateKey)
+		}
 
-			log.Printf("runOnce failed: %s", err.Error())
+		for {
+			err := connectToSshAndServe(conf, sshAuth)
+
+			log.Printf("connectToSshAndServe failed: %s", err.Error())
 
 			time.Sleep(5 * time.Second)
 		}
