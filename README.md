@@ -46,4 +46,4 @@ TODO
 - Polishing
 - Use [spf13/cobra](https://github.com/spf13/cobra)
 - Exponential backoff on errors
-- Improve error messages, handling and remove panics
+- Implement `FixedHostKey` (ssh.HostKeyCallback) instead of the insecure one
