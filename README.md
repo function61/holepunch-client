@@ -30,7 +30,7 @@ Run client:
 $ ./holepunch write-systemd-file
 $ sudo systemctl enable holepunch
 $ sudo systemctl start holepunch
-$ sudo service holepunch status
+$ sudo systemctl status holepunch
 ```
 
 
