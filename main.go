@@ -91,8 +91,8 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	log.Printf("connectToSshAndServe: connecting")
 
 	sshConfig := &ssh.ClientConfig{
-		User: conf.SshServer.Username,
-		Auth: []ssh.AuthMethod{auth},
+		User:            conf.SshServer.Username,
+		Auth:            []ssh.AuthMethod{auth},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
