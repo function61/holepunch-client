@@ -3,12 +3,15 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:0350f5d06c652fc482d77b177218c6b142bb8210ad84352dc21fc95a0e965f11"
   name = "github.com/function61/pi-security-module"
   packages = ["pkg/systemdinstaller"]
+  pruneopts = "UT"
   revision = "fbe368f7c625ef0fa817d301556f885671cc10ee"
 
 [[projects]]
   branch = "master"
+  digest = "1:b166c998eb589cd6da3aa24901f328e2d14cfe17cda0957129f880723ee9384b"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -17,13 +20,17 @@
     "internal/chacha20",
     "internal/subtle",
     "poly1305",
-    "ssh"
+    "ssh",
   ]
+  pruneopts = "UT"
   revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "530db45bda5e8c91f961776a081929c922119617ccfa1a061be666099641d255"
+  input-imports = [
+    "github.com/function61/pi-security-module/pkg/systemdinstaller",
+    "golang.org/x/crypto/ssh",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

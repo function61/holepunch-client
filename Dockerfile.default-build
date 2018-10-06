@@ -1,4 +1,4 @@
-FROM fn61/buildkit-golang:20180830_1321_5e3ef8bc40a3b5e4
+FROM fn61/buildkit-golang:20181005_1740_183e9622c00c5c6b
 
 WORKDIR /go/src/github.com/function61/holepunch-client
 

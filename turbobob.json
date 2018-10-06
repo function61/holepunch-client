@@ -9,7 +9,7 @@
 			"dev_command": [
 				"bash"
 			],
-			"pass_envs": ["BINTRAY_APIKEY"]
+			"pass_envs": ["BINTRAY_CREDS"]
 		}
 	],
 	"docker_images": []
