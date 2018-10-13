@@ -43,6 +43,5 @@ Hugely inspired by [codref's gist](https://gist.github.com/codref/473351a24a3ef9
 TODO
 ----
 
-- Polishing
 - Exponential backoff on errors
 - Implement `FixedHostKey` (ssh.HostKeyCallback) instead of the insecure one
