@@ -3,11 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7a45b83cc8a3c1094a18756cfa5b61cf1ca3d2d528b80b62b47dcf70ebbed854"
+  digest = "1:e04bbd546f6394f9786162bd71a5366ed3691da2bed27f324338e96cd219c275"
   name = "github.com/function61/gokit"
-  packages = ["systemdinstaller"]
+  packages = [
+    "bidipipe",
+    "systemdinstaller",
+  ]
   pruneopts = "UT"
-  revision = "e38c589ee94a7b2c120a7e87171eb31312dff4d0"
+  revision = "8217bb608bdb7f46a8bbe40e496aabeab1601082"
 
 [[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
@@ -53,6 +56,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/function61/gokit/bidipipe",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/spf13/cobra",
     "golang.org/x/crypto/ssh",

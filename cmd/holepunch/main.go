@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -51,27 +51,9 @@ func handleClient(client net.Conn, conf *Configuration) {
 		return
 	}
 
-	chDone := make(chan bool)
-
-	// Start remote -> local data transfer
-	go func() {
-		_, err := io.Copy(client, remote)
-		if err != nil {
-			log.Printf("handleClient: error while copy remote->local: %s", err)
-		}
-		chDone <- true
-	}()
-
-	// Start local -> remote data transfer
-	go func() {
-		_, err := io.Copy(remote, client)
-		if err != nil {
-			log.Printf("handleClient: error while copy local->remote: %s", err)
-		}
-		chDone <- true
-	}()
-
-	<-chDone
+	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
+		log.Printf("handleClient: %s", err.Error())
+	}
 
 	log.Printf("handleClient: closed")
 }
