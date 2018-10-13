@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/function61/gokit/systemdinstaller"
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,8 @@ import (
 	"os"
 	"time"
 )
+
+var version = "dev" // replaced dynamically at build time
 
 type SshServer struct {
 	Username           string   `json:"username"`
@@ -124,49 +127,69 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	}
 }
 
-func main() {
-	if len(os.Args) != 2 {
-		log.Printf("Usage: %s run | write-systemd-file", os.Args[0])
-		return
+func run() error {
+	confFile, err := os.Open("holepunch.json")
+	if err != nil {
+		return err
 	}
 
-	cmd := os.Args[1]
+	conf := &Configuration{}
+	jsonDecoder := json.NewDecoder(confFile)
+	jsonDecoder.DisallowUnknownFields()
+	if err := jsonDecoder.Decode(conf); err != nil {
+		return err
+	}
 
-	if cmd == "run" {
-		confFile, err := os.Open("holepunch.json")
-		if err != nil {
-			panic(err)
-		}
+	confFile.Close()
 
-		conf := &Configuration{}
-		jsonDecoder := json.NewDecoder(confFile)
-		jsonDecoder.DisallowUnknownFields()
-		if err := jsonDecoder.Decode(conf); err != nil {
-			panic(err)
-		}
+	sshAuth, errSshPrivateKey := publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
+	if errSshPrivateKey != nil {
+		return errSshPrivateKey
+	}
 
-		confFile.Close()
+	for {
+		err := connectToSshAndServe(conf, sshAuth)
 
-		sshAuth, errSshPrivateKey := publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
-		if errSshPrivateKey != nil {
-			panic(errSshPrivateKey)
-		}
+		log.Printf("connectToSshAndServe failed: %s", err.Error())
 
-		for {
-			err := connectToSshAndServe(conf, sshAuth)
+		time.Sleep(5 * time.Second)
+	}
+}
 
-			log.Printf("connectToSshAndServe failed: %s", err.Error())
+func main() {
+	rootCmd := &cobra.Command{
+		Use:     os.Args[0],
+		Short:   "Self-contained SSH reverse tunnel",
+		Version: version,
+	}
 
-			time.Sleep(5 * time.Second)
-		}
-	} else if cmd == "write-systemd-file" {
-		systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"run"}, "Holepunch reverse tunnel")
-		if err != nil {
-			log.Fatalf("Error: %s", err.Error())
-		}
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "run",
+		Short: "Connect to remote SSH server to make a persistent reverse tunnel",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := run(); err != nil {
+				panic(err)
+			}
+		},
+	})
 
-		fmt.Println(systemdHints)
-	} else {
-		log.Printf("Unknown command: %s", cmd)
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "write-systemd-file",
+		Short: "Install unit file to start this on startup",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"run"}, "Holepunch reverse tunnel")
+			if err != nil {
+				log.Fatalf("Error: %s", err.Error())
+			}
+
+			fmt.Println(systemdHints)
+		},
+	})
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

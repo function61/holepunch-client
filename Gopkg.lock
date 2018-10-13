@@ -3,15 +3,39 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:357bc4aae99387bf8d59336baa08d21b4a3cf40e8266a801e545b66796717351"
+  digest = "1:7a45b83cc8a3c1094a18756cfa5b61cf1ca3d2d528b80b62b47dcf70ebbed854"
   name = "github.com/function61/gokit"
   packages = ["systemdinstaller"]
   pruneopts = "UT"
-  revision = "51be2dcaf7627c3d0119999cfbc6e690180ed2f1"
+  revision = "e38c589ee94a7b2c120a7e87171eb31312dff4d0"
+
+[[projects]]
+  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
+  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
+
+[[projects]]
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
+  version = "v1.0.3"
 
 [[projects]]
   branch = "master"
-  digest = "1:b166c998eb589cd6da3aa24901f328e2d14cfe17cda0957129f880723ee9384b"
+  digest = "1:2464e24610e1cdab712d3955745c0da6d1d26c50d6a7aecf61ebe07e68d2ec4d"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -23,13 +47,14 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
+  revision = "a92615f3c49003920a58dedcf32cf55022cefb8d"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/function61/gokit/systemdinstaller",
+    "github.com/spf13/cobra",
     "golang.org/x/crypto/ssh",
   ]
   solver-name = "gps-cdcl"
