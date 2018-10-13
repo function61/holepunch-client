@@ -5,11 +5,13 @@
 	"builders": [
 		{
 			"name": "default",
+			"dockerfile_path": "build-default.Dockerfile",
 			"mount_destination": "/go/src/github.com/function61/holepunch-client",
 			"dev_command": [
 				"bash"
 			],
-			"pass_envs": ["BINTRAY_CREDS"]
+			"pass_envs": ["BINTRAY_CREDS"],
+			"contextless_build": true
 		}
 	],
 	"docker_images": []
