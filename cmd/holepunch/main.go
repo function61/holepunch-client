@@ -156,7 +156,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(&cobra.Command{
-		Use:   "run",
+		Use:   "connect",
 		Short: "Connect to remote SSH server to make a persistent reverse tunnel",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -171,7 +171,7 @@ func main() {
 		Short: "Install unit file to start this on startup",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"run"}, "Holepunch reverse tunnel")
+			systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"connect"}, "Holepunch reverse tunnel")
 			if err != nil {
 				log.Fatalf("Error: %s", err.Error())
 			}
