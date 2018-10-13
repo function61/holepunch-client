@@ -58,7 +58,7 @@ func handleClient(client net.Conn, conf *Configuration) {
 	log.Printf("handleClient: closed")
 }
 
-func publicKeyFromPrivateKeyFile(file string) (ssh.AuthMethod, error) {
+func signerFromPrivateKeyFile(file string) (ssh.Signer, error) {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot read SSH public key file %s", file)
@@ -69,7 +69,7 @@ func publicKeyFromPrivateKeyFile(file string) (ssh.AuthMethod, error) {
 		return nil, fmt.Errorf("Cannot parse SSH public key file %s", file)
 	}
 
-	return ssh.PublicKeys(key), nil
+	return key, nil
 }
 
 func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
@@ -109,25 +109,35 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	}
 }
 
-func run() error {
+func readConfig() (*Configuration, error) {
 	confFile, err := os.Open("holepunch.json")
 	if err != nil {
-		return err
+		return nil, err
 	}
+	defer confFile.Close()
 
 	conf := &Configuration{}
 	jsonDecoder := json.NewDecoder(confFile)
 	jsonDecoder.DisallowUnknownFields()
 	if err := jsonDecoder.Decode(conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
+}
+
+func run() error {
+	conf, err := readConfig()
+	if err != nil {
 		return err
 	}
 
-	confFile.Close()
-
-	sshAuth, errSshPrivateKey := publicKeyFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
-	if errSshPrivateKey != nil {
-		return errSshPrivateKey
+	privateKey, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
+	if err != nil {
+		return err
 	}
+
+	sshAuth := ssh.PublicKeys(privateKey)
 
 	for {
 		err := connectToSshAndServe(conf, sshAuth)
@@ -167,6 +177,25 @@ func main() {
 			}
 
 			fmt.Println(systemdHints)
+		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "print-pubkey",
+		Short: "Prints public key, in SSH authorized_keys format",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			conf, err := readConfig()
+			if err != nil {
+				panic(err)
+			}
+
+			key, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println(string(ssh.MarshalAuthorizedKey(key.PublicKey())))
 		},
 	})
 
