@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/function61/pi-security-module/pkg/systemdinstaller"
+	"github.com/function61/gokit/systemdinstaller"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
@@ -160,9 +160,12 @@ func main() {
 			time.Sleep(5 * time.Second)
 		}
 	} else if cmd == "write-systemd-file" {
-		if err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"run"}, "Holepunch reverse tunnel"); err != nil {
-			log.Printf("Error: %s", err.Error())
+		systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"run"}, "Holepunch reverse tunnel")
+		if err != nil {
+			log.Fatalf("Error: %s", err.Error())
 		}
+
+		fmt.Println(systemdHints)
 	} else {
 		log.Printf("Unknown command: %s", cmd)
 	}

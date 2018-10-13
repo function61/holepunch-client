@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0350f5d06c652fc482d77b177218c6b142bb8210ad84352dc21fc95a0e965f11"
-  name = "github.com/function61/pi-security-module"
-  packages = ["pkg/systemdinstaller"]
+  digest = "1:357bc4aae99387bf8d59336baa08d21b4a3cf40e8266a801e545b66796717351"
+  name = "github.com/function61/gokit"
+  packages = ["systemdinstaller"]
   pruneopts = "UT"
-  revision = "fbe368f7c625ef0fa817d301556f885671cc10ee"
+  revision = "51be2dcaf7627c3d0119999cfbc6e690180ed2f1"
 
 [[projects]]
   branch = "master"
@@ -29,7 +29,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/function61/pi-security-module/pkg/systemdinstaller",
+    "github.com/function61/gokit/systemdinstaller",
     "golang.org/x/crypto/ssh",
   ]
   solver-name = "gps-cdcl"
