@@ -139,7 +139,9 @@ func main() {
 		}
 
 		conf := &Configuration{}
-		if err := json.NewDecoder(confFile).Decode(conf); err != nil {
+		jsonDecoder := json.NewDecoder(confFile)
+		jsonDecoder.DisallowUnknownFields()
+		if err := jsonDecoder.Decode(conf); err != nil {
 			panic(err)
 		}
 
