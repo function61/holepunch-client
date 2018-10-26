@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/systemdinstaller"
+	"github.com/function61/holepunch-server/pkg/wsconnadapter"
+	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	"log"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -40,8 +45,17 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	// Connect to SSH remote server using serverEndpoint
-	sshClient, err := ssh.Dial("tcp", conf.SshServer.Endpoint.String(), sshConfig)
+	var sshClient *ssh.Client
+	var errConnect error
+
+	if isWebsocketAddress(conf.SshServer.Address) {
+		sshClient, errConnect = connectSshWebsocket(conf.SshServer.Address, sshConfig)
+	} else {
+		sshClient, errConnect = connectSshRegularTcp(conf.SshServer.Address, sshConfig)
+	}
+	if errConnect != nil {
+		return errConnect
+	}
 
 	defer sshClient.Close()
 
@@ -162,4 +176,39 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func connectSshRegularTcp(addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
+	sshClient, err := ssh.Dial("tcp", addr, sshConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return sshClient, nil
+}
+
+// addr looks like "ws://example.com/_ssh"
+func connectSshWebsocket(addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
+	emptyHeaders := http.Header{}
+	wsConn, _, err := websocket.DefaultDialer.DialContext(context.TODO(), addr, emptyHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	// even though we have a solid connection already, for some reason NewClientConn() requires
+	// address. perhaps it's uses for handshake and/or host key verification, so we shouldn't
+	// just give it a dummy value
+	wsUrl, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	connAdapter := wsconnadapter.New(wsConn)
+
+	sconn, chans, reqs, err := ssh.NewClientConn(connAdapter, wsUrl.Hostname(), sshConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return ssh.NewClient(sconn, chans, reqs), nil
 }

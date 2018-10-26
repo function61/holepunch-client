@@ -13,6 +13,22 @@
   revision = "8217bb608bdb7f46a8bbe40e496aabeab1601082"
 
 [[projects]]
+  branch = "master"
+  digest = "1:62903869b181360332d0890fba2aa389140761064c93e7b1eaedba351733990f"
+  name = "github.com/function61/holepunch-server"
+  packages = ["pkg/wsconnadapter"]
+  pruneopts = "UT"
+  revision = "e482df1f6e921b55f76706980fee93d15aa65e94"
+
+[[projects]]
+  digest = "1:7b5c6e2eeaa9ae5907c391a91c132abfd5c9e8a784a341b5625e750c67e6825d"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -58,6 +74,8 @@
   input-imports = [
     "github.com/function61/gokit/bidipipe",
     "github.com/function61/gokit/systemdinstaller",
+    "github.com/function61/holepunch-server/pkg/wsconnadapter",
+    "github.com/gorilla/websocket",
     "github.com/spf13/cobra",
     "golang.org/x/crypto/ssh",
   ]

@@ -6,12 +6,13 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type SshServer struct {
-	Username           string   `json:"username"`
-	PrivateKeyFilePath string   `json:"private_key_file_path"`
-	Endpoint           Endpoint `json:"endpoint"`
+	Address            string `json:"address"`
+	Username           string `json:"username"`
+	PrivateKeyFilePath string `json:"private_key_file_path"`
 }
 
 type Configuration struct {
@@ -51,6 +52,10 @@ func readConfig() (*Configuration, error) {
 	}
 
 	return conf, nil
+}
+
+func isWebsocketAddress(address string) bool {
+	return strings.HasPrefix(address, "ws://") || strings.HasPrefix(address, "wss://")
 }
 
 func signerFromPrivateKeyFile(file string) (ssh.Signer, error) {
