@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
@@ -112,12 +113,15 @@ func run() error {
 
 	sshAuth := ssh.PublicKeys(privateKey)
 
+	// 0ms, 100 ms, 200 ms, 400 ms, 800 ms, 1600 ms, 2000 ms, 2000 ms...
+	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 2*time.Second)
+
 	for {
 		err := connectToSshAndServe(conf, sshAuth)
 
 		log.Printf("connectToSshAndServe failed: %s", err.Error())
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(backoffTime())
 	}
 }
 

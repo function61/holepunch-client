@@ -3,14 +3,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e04bbd546f6394f9786162bd71a5366ed3691da2bed27f324338e96cd219c275"
+  digest = "1:1fd25874eaaf1202d357dcda50abf56268880238cec3d495616091c173c909a6"
   name = "github.com/function61/gokit"
   packages = [
+    "backoff",
     "bidipipe",
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "8217bb608bdb7f46a8bbe40e496aabeab1601082"
+  revision = "5f0407aca4a979d5e907bcd1899cd1d131c93a40"
 
 [[projects]]
   branch = "master"
@@ -72,6 +73,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/function61/gokit/backoff",
     "github.com/function61/gokit/bidipipe",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/holepunch-server/pkg/wsconnadapter",
