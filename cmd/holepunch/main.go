@@ -25,6 +25,10 @@ type SshServer struct {
 type Configuration struct {
 	// remote SSH server
 	SshServer SshServer `json:"ssh_server"`
+	Forwards  []Forward `json:"forwards"`
+}
+
+type Forward struct {
 	// local service to be forwarded
 	Local Endpoint `json:"local"`
 	// remote forwarding port (on remote SSH server network)
@@ -40,12 +44,13 @@ func (endpoint *Endpoint) String() string {
 	return fmt.Sprintf("%s:%d", endpoint.Host, endpoint.Port)
 }
 
-func handleClient(client net.Conn, conf *Configuration) {
+func handleClient(client net.Conn, forward Forward) {
 	defer client.Close()
+	defer log.Printf("handleClient: closed")
 
 	log.Printf("handleClient: accepted %s", client.RemoteAddr())
 
-	remote, err := net.Dial("tcp", conf.Local.String())
+	remote, err := net.Dial("tcp", forward.Local.String())
 	if err != nil {
 		log.Printf("handleClient: dial INTO local service error: %s", err.Error())
 		return
@@ -54,8 +59,6 @@ func handleClient(client net.Conn, conf *Configuration) {
 	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
 		log.Printf("handleClient: %s", err.Error())
 	}
-
-	log.Printf("handleClient: closed")
 }
 
 func signerFromPrivateKeyFile(file string) (ssh.Signer, error) {
@@ -82,31 +85,48 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	}
 
 	// Connect to SSH remote server using serverEndpoint
-	serverConn, err := ssh.Dial("tcp", conf.SshServer.Endpoint.String(), sshConfig)
-	if err != nil {
-		return err
-	}
+	sshClient, err := ssh.Dial("tcp", conf.SshServer.Endpoint.String(), sshConfig)
+
+	defer sshClient.Close()
 
 	log.Printf("connectToSshAndServe: connected")
 
+	for _, forward := range conf.Forwards {
+		// TODO: errors when Accept() fails later?
+		if err := forwardOnePort(forward, sshClient); err != nil {
+			// closes SSH connection even if one forward Listen() fails
+			return err
+		}
+	}
+
+	select {}
+}
+
+func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
 	// Listen on remote server port
-	listener, err := serverConn.Listen("tcp", conf.Remote.String())
+	listener, err := sshClient.Listen("tcp", forward.Remote.String())
 	if err != nil {
 		return err
 	}
-	defer listener.Close()
 
-	// handle incoming connections on reverse forwarded tunnel
-	for {
-		log.Printf("connectToSshAndServe: waiting for incoming connections")
+	go func() {
+		defer listener.Close()
 
-		client, err := listener.Accept()
-		if err != nil {
-			return err
+		log.Printf("forwardOnePort: listening remote %s", forward.Remote.String())
+
+		// handle incoming connections on reverse forwarded tunnel
+		for {
+			client, err := listener.Accept()
+			if err != nil {
+				log.Printf("forwardOnePort: Accept(): %s", err)
+				return
+			}
+
+			go handleClient(client, forward)
 		}
+	}()
 
-		go handleClient(client, conf)
-	}
+	return nil
 }
 
 func readConfig() (*Configuration, error) {
