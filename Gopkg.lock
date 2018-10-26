@@ -3,11 +3,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1fd25874eaaf1202d357dcda50abf56268880238cec3d495616091c173c909a6"
+  digest = "1:5ed8e9a2874ae47b0be8c2ad168a7fe2045dd1b464a5977aab02cad2c1d85560"
   name = "github.com/function61/gokit"
   packages = [
     "backoff",
     "bidipipe",
+    "logger",
     "systemdinstaller",
   ]
   pruneopts = "UT"
@@ -75,6 +76,7 @@
   input-imports = [
     "github.com/function61/gokit/backoff",
     "github.com/function61/gokit/bidipipe",
+    "github.com/function61/gokit/logger",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/holepunch-server/pkg/wsconnadapter",
     "github.com/gorilla/websocket",

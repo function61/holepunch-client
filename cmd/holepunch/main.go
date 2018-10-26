@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
+	"github.com/function61/gokit/logger"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -22,23 +22,25 @@ var version = "dev" // replaced dynamically at build time
 
 func handleClient(client net.Conn, forward Forward) {
 	defer client.Close()
-	defer log.Printf("handleClient: closed")
 
-	log.Printf("handleClient: accepted %s", client.RemoteAddr())
+	log := logger.New("handleClient")
+	log.Info(fmt.Sprintf("%s connected", client.RemoteAddr()))
+	defer log.Info("closed")
 
 	remote, err := net.Dial("tcp", forward.Local.String())
 	if err != nil {
-		log.Printf("handleClient: dial INTO local service error: %s", err.Error())
+		log.Error(fmt.Sprintf("dial INTO local service error: %s", err.Error()))
 		return
 	}
 
 	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
-		log.Printf("handleClient: %s", err.Error())
+		log.Error(err.Error())
 	}
 }
 
 func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
-	log.Printf("connectToSshAndServe: connecting")
+	log := logger.New("connectToSshAndServe")
+	log.Info("connecting")
 
 	sshConfig := &ssh.ClientConfig{
 		User:            conf.SshServer.Username,
@@ -60,7 +62,7 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 
 	defer sshClient.Close()
 
-	log.Printf("connectToSshAndServe: connected")
+	log.Info("connected; starting to forward ports")
 
 	for _, forward := range conf.Forwards {
 		// TODO: errors when Accept() fails later?
@@ -74,6 +76,8 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 }
 
 func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
+	log := logger.New("forwardOnePort")
+
 	// Listen on remote server port
 	listener, err := sshClient.Listen("tcp", forward.Remote.String())
 	if err != nil {
@@ -83,13 +87,13 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
 	go func() {
 		defer listener.Close()
 
-		log.Printf("forwardOnePort: listening remote %s", forward.Remote.String())
+		log.Info(fmt.Sprintf("listening remote %s", forward.Remote.String()))
 
 		// handle incoming connections on reverse forwarded tunnel
 		for {
 			client, err := listener.Accept()
 			if err != nil {
-				log.Printf("forwardOnePort: Accept(): %s", err)
+				log.Error(fmt.Sprintf("Accept(): %s", err.Error()))
 				return
 			}
 
@@ -100,7 +104,9 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
 	return nil
 }
 
-func run() error {
+func mainLoop() error {
+	log := logger.New("mainLoop")
+
 	conf, err := readConfig()
 	if err != nil {
 		return err
@@ -119,7 +125,7 @@ func run() error {
 	for {
 		err := connectToSshAndServe(conf, sshAuth)
 
-		log.Printf("connectToSshAndServe failed: %s", err.Error())
+		log.Error(err.Error())
 
 		time.Sleep(backoffTime())
 	}
@@ -137,7 +143,7 @@ func main() {
 		Short: "Connect to remote SSH server to make a persistent reverse tunnel",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := run(); err != nil {
+			if err := mainLoop(); err != nil {
 				panic(err)
 			}
 		},
@@ -150,7 +156,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"connect"}, "Holepunch reverse tunnel")
 			if err != nil {
-				log.Fatalf("Error: %s", err.Error())
+				panic(err)
 			}
 
 			fmt.Println(systemdHints)
