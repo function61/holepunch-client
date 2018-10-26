@@ -6,6 +6,7 @@ import (
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/logger"
+	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
@@ -38,7 +39,7 @@ func handleClient(client net.Conn, forward Forward) {
 	}
 }
 
-func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
+func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.AuthMethod) error {
 	log := logger.New("connectToSshAndServe")
 	log.Info("connecting")
 
@@ -52,7 +53,7 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	var errConnect error
 
 	if isWebsocketAddress(conf.SshServer.Address) {
-		sshClient, errConnect = connectSshWebsocket(conf.SshServer.Address, sshConfig)
+		sshClient, errConnect = connectSshWebsocket(ctx, conf.SshServer.Address, sshConfig)
 	} else {
 		sshClient, errConnect = connectSshRegularTcp(conf.SshServer.Address, sshConfig)
 	}
@@ -61,6 +62,7 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 	}
 
 	defer sshClient.Close()
+	defer log.Info("disconnecting")
 
 	log.Info("connected; starting to forward ports")
 
@@ -72,7 +74,8 @@ func connectToSshAndServe(conf *Configuration, auth ssh.AuthMethod) error {
 		}
 	}
 
-	select {}
+	<-ctx.Done()
+	return nil
 }
 
 func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
@@ -122,8 +125,21 @@ func mainLoop() error {
 	// 0ms, 100 ms, 200 ms, 400 ms, 800 ms, 1600 ms, 2000 ms, 2000 ms...
 	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 2*time.Second)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		log.Info(fmt.Sprintf("got %s; stopping", ossignal.WaitForInterruptOrTerminate()))
+
+		cancel()
+	}()
+
 	for {
-		err := connectToSshAndServe(conf, sshAuth)
+		err := connectToSshAndServe(ctx, conf, sshAuth)
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
 
 		log.Error(err.Error())
 
@@ -198,9 +214,9 @@ func connectSshRegularTcp(addr string, sshConfig *ssh.ClientConfig) (*ssh.Client
 }
 
 // addr looks like "ws://example.com/_ssh"
-func connectSshWebsocket(addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
+func connectSshWebsocket(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
 	emptyHeaders := http.Header{}
-	wsConn, _, err := websocket.DefaultDialer.DialContext(context.TODO(), addr, emptyHeaders)
+	wsConn, _, err := websocket.DefaultDialer.DialContext(ctx, addr, emptyHeaders)
 	if err != nil {
 		return nil, err
 	}
