@@ -22,8 +22,8 @@ $ ssh-keygen -t ecdsa -b 521 -C "my awesome private key" -f id_ecdsa
 
 Copy content of `id_ecdsa.pub` to your SSH server's `authorized_keys` file.
 
-Write `holepunch.json` (see `holepunch.example.json` for example). You can use this with a
-vanilla SSH server, but if you're using
+Write `holepunch.json` (see [holepunch.example.json](holepunch.example.json)).
+You can use this with a vanilla SSH server, but if you're using
 [function61/holepunch-server](https://github.com/function61/holepunch-server), you can also
 connect via WebSocket if you use format like `ws://example.com/_ssh` in server address.
 
@@ -35,6 +35,13 @@ $ sudo systemctl enable holepunch
 $ sudo systemctl start holepunch
 $ sudo systemctl status holepunch
 ```
+
+
+How to build & develop
+----------------------
+
+[How to build & develop](https://github.com/function61/turbobob/blob/master/docs/external-how-to-build-and-dev.md)
+(with Turbo Bob, our build tool). It's easy and simple!
 
 
 Credits
