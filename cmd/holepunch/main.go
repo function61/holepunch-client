@@ -208,7 +208,7 @@ func main() {
 func connectSshRegularTcp(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
 	dialer := net.Dialer{
 		Timeout:   10 * time.Second,
-		KeepAlive: 15 * time.Second,
+		KeepAlive: tcpkeepalive.DefaultDuration,
 	}
 
 	conn, err := dialer.DialContext(ctx, "tcp", addr)
