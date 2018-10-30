@@ -8,6 +8,7 @@ import (
 	"github.com/function61/gokit/logger"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
+	"github.com/function61/holepunch-server/pkg/tcpkeepalive"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 	if isWebsocketAddress(conf.SshServer.Address) {
 		sshClient, errConnect = connectSshWebsocket(ctx, conf.SshServer.Address, sshConfig)
 	} else {
-		sshClient, errConnect = connectSshRegularTcp(conf.SshServer.Address, sshConfig)
+		sshClient, errConnect = connectSshRegularTcp(ctx, conf.SshServer.Address, sshConfig)
 	}
 	if errConnect != nil {
 		return errConnect
@@ -204,13 +205,18 @@ func main() {
 	}
 }
 
-func connectSshRegularTcp(addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
-	sshClient, err := ssh.Dial("tcp", addr, sshConfig)
+func connectSshRegularTcp(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
+	dialer := net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 15 * time.Second,
+	}
+
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 
-	return sshClient, nil
+	return sshClientForConn(conn, addr, sshConfig)
 }
 
 // addr looks like "ws://example.com/_ssh"
@@ -221,6 +227,10 @@ func connectSshWebsocket(ctx context.Context, addr string, sshConfig *ssh.Client
 		return nil, err
 	}
 
+	if err := tcpkeepalive.Enable(wsConn.UnderlyingConn().(*net.TCPConn), tcpkeepalive.DefaultDuration); err != nil {
+		return nil, fmt.Errorf("tcpkeepalive: %s", err.Error())
+	}
+
 	// even though we have a solid connection already, for some reason NewClientConn() requires
 	// address. perhaps it's uses for handshake and/or host key verification, so we shouldn't
 	// just give it a dummy value
@@ -229,9 +239,11 @@ func connectSshWebsocket(ctx context.Context, addr string, sshConfig *ssh.Client
 		return nil, err
 	}
 
-	connAdapter := wsconnadapter.New(wsConn)
+	return sshClientForConn(wsconnadapter.New(wsConn), wsUrl.Hostname(), sshConfig)
+}
 
-	sconn, chans, reqs, err := ssh.NewClientConn(connAdapter, wsUrl.Hostname(), sshConfig)
+func sshClientForConn(conn net.Conn, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
+	sconn, chans, reqs, err := ssh.NewClientConn(conn, addr, sshConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -17,11 +17,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:62903869b181360332d0890fba2aa389140761064c93e7b1eaedba351733990f"
+  digest = "1:9d0769b066bca118624614142c6078da632699ad3d554846260508dee75f5ec5"
   name = "github.com/function61/holepunch-server"
-  packages = ["pkg/wsconnadapter"]
+  packages = [
+    "pkg/tcpkeepalive",
+    "pkg/wsconnadapter",
+  ]
   pruneopts = "UT"
-  revision = "e482df1f6e921b55f76706980fee93d15aa65e94"
+  revision = "63c4b820d6db20c797f7627adcf3ee15165e3d90"
 
 [[projects]]
   digest = "1:7b5c6e2eeaa9ae5907c391a91c132abfd5c9e8a784a341b5625e750c67e6825d"
@@ -80,6 +83,7 @@
     "github.com/function61/gokit/logger",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/systemdinstaller",
+    "github.com/function61/holepunch-server/pkg/tcpkeepalive",
     "github.com/function61/holepunch-server/pkg/wsconnadapter",
     "github.com/gorilla/websocket",
     "github.com/spf13/cobra",
