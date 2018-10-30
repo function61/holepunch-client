@@ -67,19 +67,28 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 
 	log.Info("connected; starting to forward ports")
 
+	listenerStopped := make(chan error, len(conf.Forwards))
+
 	for _, forward := range conf.Forwards {
 		// TODO: errors when Accept() fails later?
-		if err := forwardOnePort(forward, sshClient); err != nil {
+		if err := forwardOnePort(forward, sshClient, listenerStopped); err != nil {
 			// closes SSH connection even if one forward Listen() fails
 			return err
 		}
 	}
 
-	<-ctx.Done()
-	return nil
+	select {
+	case <-ctx.Done():
+		return nil
+	case listenerFirstErr := <-listenerStopped:
+		// assumes all the other listeners failed too so no teardown necessary
+		return listenerFirstErr
+	}
 }
 
-func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
+//    blocking flow: calls Listen() on the SSH connection, and if succeeds returns non-nil error
+// nonblocking flow: if Accept() call fails, stops goroutine and returns error on ch listenerStopped
+func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan<- error) error {
 	log := logger.New("forwardOnePort")
 
 	// Listen on remote server port
@@ -97,7 +106,7 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client) error {
 		for {
 			client, err := listener.Accept()
 			if err != nil {
-				log.Error(fmt.Sprintf("Accept(): %s", err.Error()))
+				listenerStopped <- fmt.Errorf("Accept(): %s", err.Error())
 				return
 			}
 
