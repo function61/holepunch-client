@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:882c1fb1eefe061d95e5b9c75b4d2601bacaec361307c698f5f5bfe137778c34"
+  digest = "1:ec1f06e86faa39c0e931a058ceb8e921c414ed38739de8aa9943dc0e0493e0bf"
   name = "github.com/function61/gokit"
   packages = [
     "atomicfilewrite",
@@ -14,18 +14,16 @@
     "logex",
     "ossignal",
     "systemdinstaller",
+    "tcpkeepalive",
   ]
   pruneopts = "UT"
   revision = "b30acd36f42adb55b113070ee29ce6fc06c9e861"
 
 [[projects]]
   branch = "master"
-  digest = "1:9d0769b066bca118624614142c6078da632699ad3d554846260508dee75f5ec5"
+  digest = "1:f600d839e8836e3ab3c3ddac0b3c71d029d1d52e2a907b7c6022b0690f7f44b3"
   name = "github.com/function61/holepunch-server"
-  packages = [
-    "pkg/tcpkeepalive",
-    "pkg/wsconnadapter",
-  ]
+  packages = ["pkg/wsconnadapter"]
   pruneopts = "UT"
   revision = "63c4b820d6db20c797f7627adcf3ee15165e3d90"
 
@@ -88,7 +86,7 @@
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/systemdinstaller",
-    "github.com/function61/holepunch-server/pkg/tcpkeepalive",
+    "github.com/function61/gokit/tcpkeepalive",
     "github.com/function61/holepunch-server/pkg/wsconnadapter",
     "github.com/gorilla/websocket",
     "github.com/spf13/cobra",

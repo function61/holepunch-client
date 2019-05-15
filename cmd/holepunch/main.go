@@ -9,7 +9,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
-	"github.com/function61/holepunch-server/pkg/tcpkeepalive"
+	"github.com/function61/gokit/tcpkeepalive"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
