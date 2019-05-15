@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
+	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
@@ -19,8 +20,6 @@ import (
 	"os"
 	"time"
 )
-
-var version = "dev" // replaced dynamically at build time
 
 var (
 	rootLogger              = logex.StandardLogger()
@@ -162,7 +161,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:     os.Args[0],
 		Short:   "Self-contained SSH reverse tunnel",
-		Version: version,
+		Version: dynversion.Version,
 	}
 
 	rootCmd.AddCommand(&cobra.Command{
