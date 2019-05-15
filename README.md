@@ -4,7 +4,12 @@
 What?
 -----
 
-This is a standalone binary for creating a semi-persistent SSH reverse tunnel.
+This is a standalone binary for creating a semi-persistent (client tries its best to
+detect errors, use keepalives and do reconnects) SSH reverse tunnel.
+
+You can use the native OpenSSH server as a server, or
+[function61/holepunch-server](https://github.com/function61/holepunch-server) which brings
+some fancier optional features like purely-over-HTTP operation.
 
 Failed connections are automatically retried and includes a helper to add this service to system startup (Systemd).
 
