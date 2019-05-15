@@ -1,5 +1,5 @@
 [![Build Status](https://img.shields.io/travis/function61/holepunch-client.svg?style=for-the-badge)](https://travis-ci.org/function61/holepunch-client)
-[![Download](https://img.shields.io/bintray/v/function61/holepunch-client/main.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/holepunch-client/main/_latestVersion#files)
+[![Download](https://img.shields.io/bintray/v/function61/dl/holepunch-client.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/holepunch-client/_latestVersion#files)
 
 What?
 -----
