@@ -17,7 +17,7 @@ Failed connections are automatically retried and includes a helper to add this s
 Usage
 -----
 
-Download a suitable binary for you from the Bintray link.
+Download a suitable binary (we support Linux/AMD64, Linux/ARM and Windows/AMD64) for you from the Bintray link.
 
 First, generate a keypair for you:
 
@@ -32,7 +32,7 @@ You can use this with a vanilla SSH server, but if you're using
 [function61/holepunch-server](https://github.com/function61/holepunch-server), you can also
 connect via WebSocket if you use format like `ws://example.com/_ssh` in server address.
 
-Run client:
+Run client (this example is for Linux):
 
 ```
 $ ./holepunch write-systemd-file
