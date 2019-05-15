@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
-	"github.com/function61/gokit/logger"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/holepunch-server/pkg/tcpkeepalive"
@@ -22,27 +22,33 @@ import (
 
 var version = "dev" // replaced dynamically at build time
 
+var (
+	rootLogger              = logex.StandardLogger()
+	handleClientLog         = logex.Levels(logex.Prefix("handleClient", rootLogger))
+	connectToSshAndServeLog = logex.Levels(logex.Prefix("connectToSshAndServe", rootLogger))
+	forwardOnePortLog       = logex.Levels(logex.Prefix("forwardOnePort", rootLogger))
+	mainLoopLog             = logex.Levels(logex.Prefix("mainLoop", rootLogger))
+)
+
 func handleClient(client net.Conn, forward Forward) {
 	defer client.Close()
 
-	log := logger.New("handleClient")
-	log.Info(fmt.Sprintf("%s connected", client.RemoteAddr()))
-	defer log.Info("closed")
+	handleClientLog.Info.Printf("%s connected", client.RemoteAddr())
+	defer handleClientLog.Info.Println("closed")
 
 	remote, err := net.Dial("tcp", forward.Local.String())
 	if err != nil {
-		log.Error(fmt.Sprintf("dial INTO local service error: %s", err.Error()))
+		handleClientLog.Error.Printf("dial INTO local service error: %s", err.Error())
 		return
 	}
 
 	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
-		log.Error(err.Error())
+		handleClientLog.Error.Println(err.Error())
 	}
 }
 
 func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.AuthMethod) error {
-	log := logger.New("connectToSshAndServe")
-	log.Info("connecting")
+	connectToSshAndServeLog.Info.Println("connecting")
 
 	sshConfig := &ssh.ClientConfig{
 		User:            conf.SshServer.Username,
@@ -63,9 +69,9 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 	}
 
 	defer sshClient.Close()
-	defer log.Info("disconnecting")
+	defer connectToSshAndServeLog.Info.Println("disconnecting")
 
-	log.Info("connected; starting to forward ports")
+	connectToSshAndServeLog.Info.Println("connected; starting to forward ports")
 
 	listenerStopped := make(chan error, len(conf.Forwards))
 
@@ -88,8 +94,6 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 //    blocking flow: calls Listen() on the SSH connection, and if succeeds returns non-nil error
 // nonblocking flow: if Accept() call fails, stops goroutine and returns error on ch listenerStopped
 func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan<- error) error {
-	log := logger.New("forwardOnePort")
-
 	// Listen on remote server port
 	listener, err := sshClient.Listen("tcp", forward.Remote.String())
 	if err != nil {
@@ -99,7 +103,7 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan
 	go func() {
 		defer listener.Close()
 
-		log.Info(fmt.Sprintf("listening remote %s", forward.Remote.String()))
+		forwardOnePortLog.Info.Printf("listening remote %s", forward.Remote.String())
 
 		// handle incoming connections on reverse forwarded tunnel
 		for {
@@ -117,8 +121,6 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan
 }
 
 func mainLoop() error {
-	log := logger.New("mainLoop")
-
 	conf, err := readConfig()
 	if err != nil {
 		return err
@@ -137,7 +139,7 @@ func mainLoop() error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
-		log.Info(fmt.Sprintf("got %s; stopping", ossignal.WaitForInterruptOrTerminate()))
+		mainLoopLog.Info.Printf("got %s; stopping", <-ossignal.InterruptOrTerminate())
 
 		cancel()
 	}()
@@ -150,7 +152,7 @@ func mainLoop() error {
 		default:
 		}
 
-		log.Error(err.Error())
+		mainLoopLog.Error.Println(err.Error())
 
 		time.Sleep(backoffTime())
 	}

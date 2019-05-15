@@ -3,17 +3,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7bbdc9b7782ccf8a1c4ccb970b130c53c84adc9216d17e8c17fd353308791f67"
+  digest = "1:edf9aaa5dff551ccaaf7535451abb49946088955b19e60ad5fb2f52e0ab4f70d"
   name = "github.com/function61/gokit"
   packages = [
     "backoff",
     "bidipipe",
-    "logger",
+    "logex",
     "ossignal",
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "5f0407aca4a979d5e907bcd1899cd1d131c93a40"
+  revision = "b30acd36f42adb55b113070ee29ce6fc06c9e861"
 
 [[projects]]
   branch = "master"
@@ -80,7 +80,7 @@
   input-imports = [
     "github.com/function61/gokit/backoff",
     "github.com/function61/gokit/bidipipe",
-    "github.com/function61/gokit/logger",
+    "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/holepunch-server/pkg/tcpkeepalive",
