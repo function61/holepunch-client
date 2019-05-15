@@ -70,7 +70,6 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 	listenerStopped := make(chan error, len(conf.Forwards))
 
 	for _, forward := range conf.Forwards {
-		// TODO: errors when Accept() fails later?
 		if err := forwardOnePort(forward, sshClient, listenerStopped); err != nil {
 			// closes SSH connection even if one forward Listen() fails
 			return err
