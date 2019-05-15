@@ -1,11 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/function61/gokit/jsonfile"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -38,20 +37,8 @@ func (endpoint *Endpoint) String() string {
 }
 
 func readConfig() (*Configuration, error) {
-	confFile, err := os.Open("holepunch.json")
-	if err != nil {
-		return nil, err
-	}
-	defer confFile.Close()
-
 	conf := &Configuration{}
-	jsonDecoder := json.NewDecoder(confFile)
-	jsonDecoder.DisallowUnknownFields()
-	if err := jsonDecoder.Decode(conf); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
+	return conf, jsonfile.Read("holepunch.json", conf, true)
 }
 
 func isWebsocketAddress(address string) bool {

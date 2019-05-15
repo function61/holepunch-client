@@ -3,11 +3,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:edf9aaa5dff551ccaaf7535451abb49946088955b19e60ad5fb2f52e0ab4f70d"
+  digest = "1:154ec5070870aef8828c9141cd87c06d506646802be9216435387078ca996542"
   name = "github.com/function61/gokit"
   packages = [
+    "atomicfilewrite",
     "backoff",
     "bidipipe",
+    "jsonfile",
     "logex",
     "ossignal",
     "systemdinstaller",
@@ -80,6 +82,7 @@
   input-imports = [
     "github.com/function61/gokit/backoff",
     "github.com/function61/gokit/bidipipe",
+    "github.com/function61/gokit/jsonfile",
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/systemdinstaller",
