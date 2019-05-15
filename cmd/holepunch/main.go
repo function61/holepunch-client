@@ -208,6 +208,17 @@ func main() {
 		},
 	})
 
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "lint",
+		Short: "Validates syntax of your config file",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			if _, err := readConfig(); err != nil {
+				panic(err)
+			}
+		},
+	})
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
