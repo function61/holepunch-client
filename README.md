@@ -31,9 +31,16 @@ Copy content of `id_ecdsa.pub` to your SSH server's `authorized_keys` file.
 Write `holepunch.json` (see [holepunch.example.json](holepunch.example.json)).
 You can use this with a vanilla SSH server, but if you're using
 [function61/holepunch-server](https://github.com/function61/holepunch-server), you can also
-connect via WebSocket if you use format like `ws://example.com/_ssh` in server address.
+connect via WebSocket if you use format like `ws://example.com/_ssh` as server address
+(or `wss://` for https).
 
-Run client (this example is for Linux):
+Run client:
+
+```console
+$ ./holepunch connect
+```
+
+To make holepunch automatically start on system startup (and restart on crashes):
 
 ```console
 $ ./holepunch write-systemd-file
