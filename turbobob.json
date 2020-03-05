@@ -5,9 +5,9 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20190316_0913_96b56b86",
-			"mount_destination": "/go/src/github.com/function61/holepunch-client",
-			"workdir": "/go/src/github.com/function61/holepunch-client",
+			"uses": "docker://fn61/buildkit-golang:20200212_0907_06f93bc3",
+			"mount_destination": "/workspace",
+			"workdir": "/workspace",
 			"commands": {
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
