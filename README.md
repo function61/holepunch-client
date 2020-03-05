@@ -1,5 +1,5 @@
 ![Build status](https://github.com/function61/holepunch-client/workflows/Build/badge.svg)
-[![Download](https://img.shields.io/github/downloads/function61/holepunch-client/total.svg?style=for-the-badge)](https://github.com/function61/holepunch-server/releases)
+[![Download](https://img.shields.io/github/downloads/function61/holepunch-client/total.svg?style=for-the-badge)](https://github.com/function61/holepunch-client/releases)
 
 What?
 -----
