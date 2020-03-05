@@ -1,5 +1,5 @@
-[![Build Status](https://img.shields.io/travis/function61/holepunch-client.svg?style=for-the-badge)](https://travis-ci.org/function61/holepunch-client)
-[![Download](https://img.shields.io/bintray/v/function61/dl/holepunch-client.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/holepunch-client/_latestVersion#files)
+![Build status](https://github.com/function61/holepunch-client/workflows/Build/badge.svg)
+[![Download](https://img.shields.io/github/downloads/function61/holepunch-client/total.svg?style=for-the-badge)](https://github.com/function61/holepunch-server/releases)
 
 What?
 -----
@@ -17,7 +17,8 @@ Failed connections are automatically retried and includes a helper to add this s
 Usage
 -----
 
-Download a suitable binary (we support Linux/AMD64, Linux/ARM and Windows/AMD64) for you from the Bintray link.
+Download a suitable binary (we support Linux/AMD64, Linux/ARM and Windows/AMD64) for you
+from the download link.
 
 First, generate a keypair for you:
 
