@@ -180,12 +180,17 @@ func main() {
 		Short: "Install unit file to start this on startup",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			systemdHints, err := systemdinstaller.InstallSystemdServiceFile("holepunch", []string{"connect"}, "Holepunch reverse tunnel")
-			if err != nil {
-				panic(err)
-			}
+			service := systemdinstaller.SystemdServiceFile(
+				"holepunch",
+				"Reverse tunnel",
+				systemdinstaller.Args("connect"),
+				systemdinstaller.Docs(
+					"https://github.com/function61/holepunch-client",
+					"https://function61.com/"))
 
-			fmt.Println(systemdHints)
+			exitIfError(systemdinstaller.Install(service))
+
+			fmt.Println(systemdinstaller.GetHints(service))
 		},
 	})
 
