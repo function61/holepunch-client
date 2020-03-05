@@ -169,9 +169,7 @@ func main() {
 		Short: "Connect to remote SSH server to make a persistent reverse tunnel",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := mainLoop(); err != nil {
-				panic(err)
-			}
+			exitIfError(mainLoop())
 		},
 	})
 
@@ -200,14 +198,10 @@ func main() {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			conf, err := readConfig()
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
 			key, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
 			fmt.Println(string(ssh.MarshalAuthorizedKey(key.PublicKey())))
 		},
@@ -218,16 +212,12 @@ func main() {
 		Short: "Validates syntax of your config file",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if _, err := readConfig(); err != nil {
-				panic(err)
-			}
+			_, err := readConfig()
+			exitIfError(err)
 		},
 	})
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	exitIfError(rootCmd.Execute())
 }
 
 func connectSshRegularTcp(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
@@ -274,4 +264,11 @@ func sshClientForConn(conn net.Conn, addr string, sshConfig *ssh.ClientConfig) (
 	}
 
 	return ssh.NewClient(sconn, chans, reqs), nil
+}
+
+func exitIfError(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
