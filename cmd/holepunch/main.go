@@ -9,7 +9,6 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/systemdinstaller"
-	"github.com/function61/gokit/tcpkeepalive"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
@@ -240,8 +239,7 @@ func main() {
 
 func connectSshRegularTcp(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
 	dialer := net.Dialer{
-		Timeout:   10 * time.Second,
-		KeepAlive: tcpkeepalive.DefaultDuration,
+		Timeout: 10 * time.Second,
 	}
 
 	conn, err := dialer.DialContext(ctx, "tcp", addr)
@@ -252,16 +250,12 @@ func connectSshRegularTcp(ctx context.Context, addr string, sshConfig *ssh.Clien
 	return sshClientForConn(conn, addr, sshConfig)
 }
 
-// addr looks like "ws://example.com/_ssh"
+// addr looks like "ws://example.com/_ssh" (or wss://..)
 func connectSshWebsocket(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {
 	emptyHeaders := http.Header{}
 	wsConn, _, err := websocket.DefaultDialer.DialContext(ctx, addr, emptyHeaders)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := tcpkeepalive.Enable(wsConn.UnderlyingConn().(*net.TCPConn), tcpkeepalive.DefaultDuration); err != nil {
-		return nil, fmt.Errorf("tcpkeepalive: %s", err.Error())
 	}
 
 	// even though we have a solid connection already, for some reason NewClientConn() requires
