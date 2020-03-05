@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,33 +22,35 @@ import (
 	"time"
 )
 
-var (
-	rootLogger              = logex.StandardLogger()
-	handleClientLog         = logex.Levels(logex.Prefix("handleClient", rootLogger))
-	connectToSshAndServeLog = logex.Levels(logex.Prefix("connectToSshAndServe", rootLogger))
-	forwardOnePortLog       = logex.Levels(logex.Prefix("forwardOnePort", rootLogger))
-	mainLoopLog             = logex.Levels(logex.Prefix("mainLoop", rootLogger))
-)
-
-func handleClient(client net.Conn, forward Forward) {
+func handleClient(client net.Conn, forward Forward, logger *log.Logger) {
 	defer client.Close()
 
-	handleClientLog.Info.Printf("%s connected", client.RemoteAddr())
-	defer handleClientLog.Info.Println("closed")
+	logl := logex.Levels(logger)
+
+	logl.Info.Printf("%s connected", client.RemoteAddr())
+	defer logl.Info.Println("closed")
 
 	remote, err := net.Dial("tcp", forward.Local.String())
 	if err != nil {
-		handleClientLog.Error.Printf("dial INTO local service error: %s", err.Error())
+		logl.Error.Printf("dial INTO local service error: %s", err.Error())
 		return
 	}
 
 	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
-		handleClientLog.Error.Println(err.Error())
+		logl.Error.Println(err.Error())
 	}
 }
 
-func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.AuthMethod) error {
-	connectToSshAndServeLog.Info.Println("connecting")
+func connectToSshAndServe(
+	ctx context.Context,
+	conf *Configuration,
+	auth ssh.AuthMethod,
+	logger *log.Logger,
+	makeLogger loggerFactory,
+) error {
+	logl := logex.Levels(logger)
+
+	logl.Info.Println("connecting")
 
 	sshConfig := &ssh.ClientConfig{
 		User:            conf.SshServer.Username,
@@ -68,15 +71,21 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 	}
 
 	defer sshClient.Close()
-	defer connectToSshAndServeLog.Info.Println("disconnecting")
+	defer logl.Info.Println("disconnecting")
 
-	connectToSshAndServeLog.Info.Println("connected; starting to forward ports")
+	logl.Info.Println("connected; starting to forward ports")
 
 	listenerStopped := make(chan error, len(conf.Forwards))
 
 	for _, forward := range conf.Forwards {
-		if err := forwardOnePort(forward, sshClient, listenerStopped); err != nil {
-			// closes SSH connection even if one forward Listen() fails
+		if err := forwardOnePort(
+			forward,
+			sshClient,
+			listenerStopped,
+			makeLogger("forwardOnePort"),
+			makeLogger,
+		); err != nil {
+			// closes SSH connection if even one forward Listen() fails
 			return err
 		}
 	}
@@ -92,7 +101,15 @@ func connectToSshAndServe(ctx context.Context, conf *Configuration, auth ssh.Aut
 
 //    blocking flow: calls Listen() on the SSH connection, and if succeeds returns non-nil error
 // nonblocking flow: if Accept() call fails, stops goroutine and returns error on ch listenerStopped
-func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan<- error) error {
+func forwardOnePort(
+	forward Forward,
+	sshClient *ssh.Client,
+	listenerStopped chan<- error,
+	logger *log.Logger,
+	mkLogger loggerFactory,
+) error {
+	logl := logex.Levels(logger)
+
 	// Listen on remote server port
 	listener, err := sshClient.Listen("tcp", forward.Remote.String())
 	if err != nil {
@@ -102,7 +119,7 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan
 	go func() {
 		defer listener.Close()
 
-		forwardOnePortLog.Info.Printf("listening remote %s", forward.Remote.String())
+		logl.Info.Printf("listening remote %s", forward.Remote.String())
 
 		// handle incoming connections on reverse forwarded tunnel
 		for {
@@ -112,14 +129,14 @@ func forwardOnePort(forward Forward, sshClient *ssh.Client, listenerStopped chan
 				return
 			}
 
-			go handleClient(client, forward)
+			go handleClient(client, forward, mkLogger("handleClient"))
 		}
 	}()
 
 	return nil
 }
 
-func mainLoop() error {
+func mainInternal(ctx context.Context, logger *log.Logger) error {
 	conf, err := readConfig()
 	if err != nil {
 		return err
@@ -135,23 +152,20 @@ func mainLoop() error {
 	// 0ms, 100 ms, 200 ms, 400 ms, ...
 	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		mainLoopLog.Info.Printf("got %s; stopping", <-ossignal.InterruptOrTerminate())
-
-		cancel()
-	}()
-
 	for {
-		err := connectToSshAndServe(ctx, conf, sshAuth)
+		err := connectToSshAndServe(
+			ctx,
+			conf,
+			sshAuth,
+			logex.Prefix("connectToSshAndServe", logger),
+			mkLoggerFactory(logger))
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
 
-		mainLoopLog.Error.Println(err.Error())
+		logex.Levels(logger).Error.Println(err.Error())
 
 		time.Sleep(backoffTime())
 	}
@@ -169,7 +183,11 @@ func main() {
 		Short: "Connect to remote SSH server to make a persistent reverse tunnel",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(mainLoop())
+			logger := logex.StandardLogger()
+
+			exitIfError(mainInternal(
+				ossignal.InterruptOrTerminateBackgroundCtx(logger),
+				logger))
 		},
 	})
 
@@ -264,6 +282,14 @@ func sshClientForConn(conn net.Conn, addr string, sshConfig *ssh.ClientConfig) (
 	}
 
 	return ssh.NewClient(sconn, chans, reqs), nil
+}
+
+type loggerFactory func(prefix string) *log.Logger
+
+func mkLoggerFactory(rootLogger *log.Logger) loggerFactory {
+	return func(prefix string) *log.Logger {
+		return logex.Prefix(prefix, rootLogger)
+	}
 }
 
 func exitIfError(err error) {
