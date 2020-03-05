@@ -21,7 +21,7 @@ Download a suitable binary (we support Linux/AMD64, Linux/ARM and Windows/AMD64)
 
 First, generate a keypair for you:
 
-```
+```console
 $ ssh-keygen -t ecdsa -b 521 -C "my awesome private key" -f id_ecdsa
 ```
 
@@ -34,11 +34,13 @@ connect via WebSocket if you use format like `ws://example.com/_ssh` in server a
 
 Run client (this example is for Linux):
 
-```
+```console
 $ ./holepunch write-systemd-file
-$ sudo systemctl enable holepunch
-$ sudo systemctl start holepunch
-$ sudo systemctl status holepunch
+Wrote unit file to /etc/systemd/system/holepunch.service
+Run to enable on boot & to start now:
+        $ systemctl enable holepunch
+        $ systemctl start holepunch
+        $ systemctl status holepunch
 ```
 
 
