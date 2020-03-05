@@ -132,8 +132,8 @@ func mainLoop() error {
 
 	sshAuth := ssh.PublicKeys(privateKey)
 
-	// 0ms, 100 ms, 200 ms, 400 ms, 800 ms, 1600 ms, 2000 ms, 2000 ms...
-	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 2*time.Second)
+	// 0ms, 100 ms, 200 ms, 400 ms, ...
+	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
