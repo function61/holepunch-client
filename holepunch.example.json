@@ -1,6 +1,6 @@
 {
 	"ssh_server": {
-		"address": "my-ssh-server.example.com",
+		"address": "my-ssh-server.example.com:22",
 		"username": "root",
 		"private_key_file_path": "id_ecdsa"
 	},
