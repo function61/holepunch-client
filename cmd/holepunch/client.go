@@ -9,12 +9,53 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
 )
+
+// almost same as connectToSshAndServe(), but with retry logic (and config setup)
+func connectToSshAndServeWithRetries(ctx context.Context, logger *log.Logger) error {
+	conf, err := readConfig()
+	if err != nil {
+		return err
+	}
+
+	privateKey, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
+	if err != nil {
+		return err
+	}
+
+	sshAuth := ssh.PublicKeys(privateKey)
+
+	// 0ms, 100 ms, 200 ms, 400 ms, ...
+	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
+
+	for {
+		err := connectToSshAndServe(
+			ctx,
+			conf,
+			sshAuth,
+			logex.Prefix("connectToSshAndServe", logger),
+			mkLoggerFactory(logger))
+
+		if err != nil {
+			logex.Levels(logger).Error.Println(err.Error())
+		}
+
+		// check (non-blocking) if user requested stop
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+
+		time.Sleep(backoffTime())
+	}
+}
 
 // connect once to the SSH server. if the connection breaks, we return error and the caller
 // will try to re-connect

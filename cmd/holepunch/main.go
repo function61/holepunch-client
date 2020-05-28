@@ -1,13 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"os"
-	"time"
 
-	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
@@ -15,46 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 )
-
-// almost same as connectToSshAndServe(), but with retry logic (and config setup)
-func connectToSshAndServeWithRetries(ctx context.Context, logger *log.Logger) error {
-	conf, err := readConfig()
-	if err != nil {
-		return err
-	}
-
-	privateKey, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
-	if err != nil {
-		return err
-	}
-
-	sshAuth := ssh.PublicKeys(privateKey)
-
-	// 0ms, 100 ms, 200 ms, 400 ms, ...
-	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
-
-	for {
-		err := connectToSshAndServe(
-			ctx,
-			conf,
-			sshAuth,
-			logex.Prefix("connectToSshAndServe", logger),
-			mkLoggerFactory(logger))
-
-		if err != nil {
-			logex.Levels(logger).Error.Println(err.Error())
-		}
-
-		// check (non-blocking) if user requested stop
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-		}
-
-		time.Sleep(backoffTime())
-	}
-}
 
 func main() {
 	rootCmd := &cobra.Command{
