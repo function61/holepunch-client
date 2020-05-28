@@ -40,6 +40,8 @@ Run client:
 $ ./holepunch connect
 ```
 
+To exit, type `Ctrl + c` for graceful stop.
+
 To make holepunch automatically start on system startup (and restart on crashes):
 
 ```console
@@ -57,6 +59,9 @@ How to build & develop
 
 [How to build & develop](https://github.com/function61/turbobob/blob/master/docs/external-how-to-build-and-dev.md)
 (with Turbo Bob, our build tool). It's easy and simple!
+
+If you prefer to not install Turbo Bob, standard Go build commands work
+([instructions here](https://github.com/function61/holepunch-client/issues/10#issuecomment-634530149)).
 
 
 Credits

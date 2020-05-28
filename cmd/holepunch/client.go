@@ -184,6 +184,14 @@ func handleReverseForwardConn(client net.Conn, forward Forward, logger *log.Logg
 		return
 	}
 
+	// pipe data in both directions:
+	// - client => remote
+	// - remote => client
+	//
+	// - in effect, we act as a proxy between the reverse tunnel's client and locally-dialed
+	//   remote endpoint.
+	// - the "client" and "remote" strings we give Pipe() is just for error&log messages
+	// - this blocks until either of the parties' socket closes (or breaks)
 	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
 		logl.Error.Println(err.Error())
 	}
