@@ -81,7 +81,12 @@ func connectToSshAndServe(
 	case listenerFirstErr := <-listenerStopped:
 		// one or more of the listeners encountered an error. react by closing the connection
 		// assumes all the other listeners failed too so no teardown necessary
-		return listenerFirstErr
+		select {
+		case <-ctx.Done(): // pretty much errors are to be expected if cancellation triggered
+			return nil
+		default:
+			return listenerFirstErr
+		}
 	}
 }
 

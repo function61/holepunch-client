@@ -40,13 +40,17 @@ func connectToSshAndServeWithRetries(ctx context.Context, logger *log.Logger) er
 			sshAuth,
 			logex.Prefix("connectToSshAndServe", logger),
 			mkLoggerFactory(logger))
+
+		if err != nil {
+			logex.Levels(logger).Error.Println(err.Error())
+		}
+
+		// check (non-blocking) if user requested stop
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
-
-		logex.Levels(logger).Error.Println(err.Error())
 
 		time.Sleep(backoffTime())
 	}
