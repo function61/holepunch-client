@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
@@ -10,9 +14,6 @@ import (
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
-	"log"
-	"os"
-	"time"
 )
 
 // almost same as connectToSshAndServe(), but with retry logic (and config setup)

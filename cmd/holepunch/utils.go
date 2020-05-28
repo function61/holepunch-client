@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/function61/gokit/logex"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"net"
 	"os"
+
+	"github.com/function61/gokit/logex"
+	"golang.org/x/crypto/ssh"
 )
 
 func sshClientForConn(conn net.Conn, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {

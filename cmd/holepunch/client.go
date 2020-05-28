@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/function61/gokit/bidipipe"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/holepunch-server/pkg/wsconnadapter"
-	"github.com/gorilla/websocket"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/function61/gokit/bidipipe"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/holepunch-server/pkg/wsconnadapter"
+	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/ssh"
 )
 
 // connect once to the SSH server. if the connection breaks, we return error and the caller

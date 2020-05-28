@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/function61/gokit/jsonfile"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"strings"
+
+	"github.com/function61/gokit/jsonfile"
+	"golang.org/x/crypto/ssh"
 )
 
 type SshServer struct {
