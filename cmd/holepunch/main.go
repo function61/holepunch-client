@@ -15,7 +15,8 @@ import (
 	"time"
 )
 
-func logic(ctx context.Context, logger *log.Logger) error {
+// almost same as connectToSshAndServe(), but with retry logic (and config setup)
+func connectToSshAndServeWithRetries(ctx context.Context, logger *log.Logger) error {
 	conf, err := readConfig()
 	if err != nil {
 		return err
@@ -64,7 +65,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := logex.StandardLogger()
 
-			exitIfError(logic(
+			exitIfError(connectToSshAndServeWithRetries(
 				ossignal.InterruptOrTerminateBackgroundCtx(logger),
 				logger))
 		},

@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+// connect once to the SSH server. if the connection breaks, we return error and the caller
+// will try to re-connect
 func connectToSshAndServe(
 	ctx context.Context,
 	conf *Configuration,
@@ -44,14 +46,20 @@ func connectToSshAndServe(
 		return errConnect
 	}
 
+	// always disconnect when function returns
 	defer sshClient.Close()
 	defer logl.Info.Println("disconnecting")
 
 	logl.Info.Println("connected; starting to forward ports")
 
+	// each listener in reverseForwardOnePort() can return one error, so make sure channel
+	// has enough buffering so even if we return from here, the goroutines won't block trying
+	// to return an error
 	listenerStopped := make(chan error, len(conf.Forwards))
 
 	for _, forward := range conf.Forwards {
+		// TODO: "if any fails, tear down all workers" -style error handling would be better
+		// handled with https://pkg.go.dev/golang.org/x/sync/errgroup?tab=doc
 		if err := reverseForwardOnePort(
 			forward,
 			sshClient,
@@ -64,10 +72,13 @@ func connectToSshAndServe(
 		}
 	}
 
+	// we're connected and have succesfully started listening on all reverse forwards, wait
+	// for either user to ask us to stop or any of the listeners to error
 	select {
-	case <-ctx.Done():
+	case <-ctx.Done(): // cancel requested
 		return nil
 	case listenerFirstErr := <-listenerStopped:
+		// one or more of the listeners encountered an error. react by closing the connection
 		// assumes all the other listeners failed too so no teardown necessary
 		return listenerFirstErr
 	}
@@ -84,7 +95,7 @@ func reverseForwardOnePort(
 ) error {
 	logl := logex.Levels(logger)
 
-	// Listen on remote server port
+	// reverse listen on remote server port
 	listener, err := sshClient.Listen("tcp", forward.Remote.String())
 	if err != nil {
 		return err
@@ -103,6 +114,8 @@ func reverseForwardOnePort(
 				return
 			}
 
+			// handle the connection in another goroutine, so we can support multiple concurrent
+			// connections on the same port
 			go handleReverseForwardConn(client, forward, mkLogger("handleReverseForwardConn"))
 		}
 	}()
