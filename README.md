@@ -4,6 +4,9 @@
 What?
 -----
 
+UPDATE: You might be best served by mesh VPN like Tailscale (or WireGuard), they can even expose subnets.
+
+
 This is a standalone binary for creating a semi-persistent (client tries its best to
 detect errors, use keepalives and do reconnects) SSH reverse tunnel.
 
