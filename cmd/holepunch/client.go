@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/function61/gokit/backoff"
-	"github.com/function61/gokit/bidipipe"
-	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/app/backoff"
+	"github.com/function61/gokit/io/bidipipe"
+	"github.com/function61/gokit/log/logex"
 	"github.com/function61/holepunch-server/pkg/wsconnadapter"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
@@ -192,7 +192,10 @@ func handleReverseForwardConn(client net.Conn, forward Forward, logger *log.Logg
 	//   remote endpoint.
 	// - the "client" and "remote" strings we give Pipe() is just for error&log messages
 	// - this blocks until either of the parties' socket closes (or breaks)
-	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
+	if err := bidipipe.Pipe(
+		bidipipe.WithName("client", client),
+		bidipipe.WithName("remote", remote),
+	); err != nil {
 		logl.Error.Println(err.Error())
 	}
 }

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/function61/gokit/dynversion"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
-	"github.com/function61/gokit/systemdinstaller"
+	"github.com/function61/gokit/app/dynversion"
+	"github.com/function61/gokit/log/logex"
+	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/systemdinstaller"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 )
@@ -26,8 +26,8 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := logex.StandardLogger()
 
-			exitIfError(connectToSshAndServeWithRetries(
-				ossignal.InterruptOrTerminateBackgroundCtx(logger),
+			osutil.ExitIfError(connectToSshAndServeWithRetries(
+				osutil.CancelOnInterruptOrTerminate(logger),
 				logger))
 		},
 	})
@@ -37,7 +37,7 @@ func main() {
 		Short: "Install unit file to start this on startup",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			service := systemdinstaller.SystemdServiceFile(
+			service := systemdinstaller.Service(
 				"holepunch",
 				"Reverse tunnel",
 				systemdinstaller.Args("connect"),
@@ -45,9 +45,9 @@ func main() {
 					"https://github.com/function61/holepunch-client",
 					"https://function61.com/"))
 
-			exitIfError(systemdinstaller.Install(service))
+			osutil.ExitIfError(systemdinstaller.Install(service))
 
-			fmt.Println(systemdinstaller.GetHints(service))
+			fmt.Println(systemdinstaller.EnableAndStartCommandHints(service))
 		},
 	})
 
@@ -57,10 +57,10 @@ func main() {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			conf, err := readConfig()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			key, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			fmt.Println(string(ssh.MarshalAuthorizedKey(key.PublicKey())))
 		},
@@ -72,9 +72,9 @@ func main() {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			_, err := readConfig()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 		},
 	})
 
-	exitIfError(rootCmd.Execute())
+	osutil.ExitIfError(rootCmd.Execute())
 }

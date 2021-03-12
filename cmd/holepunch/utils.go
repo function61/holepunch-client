@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
-	"os"
 
-	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/log/logex"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -24,12 +22,5 @@ type loggerFactory func(prefix string) *log.Logger
 func mkLoggerFactory(rootLogger *log.Logger) loggerFactory {
 	return func(prefix string) *log.Logger {
 		return logex.Prefix(prefix, rootLogger)
-	}
-}
-
-func exitIfError(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
 	}
 }

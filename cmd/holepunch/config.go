@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/gokit/encoding/jsonfile"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -39,7 +39,7 @@ func (endpoint *Endpoint) String() string {
 
 func readConfig() (*Configuration, error) {
 	conf := &Configuration{}
-	return conf, jsonfile.Read("holepunch.json", conf, true)
+	return conf, jsonfile.ReadDisallowUnknownFields("holepunch.json", conf)
 }
 
 func isWebsocketAddress(address string) bool {
