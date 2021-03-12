@@ -37,6 +37,9 @@ You can use this with a vanilla SSH server, but if you're using
 connect via WebSocket if you use format like `ws://example.com/_ssh` as server address
 (or `wss://` for https).
 
+If you use holepunch-server, the default username is `hp`, but it can be overridden
+(see the server documentation).
+
 Run client:
 
 ```console
